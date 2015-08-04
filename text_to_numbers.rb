@@ -2,8 +2,6 @@ require 'pry'
 
 class TextToNumbers
 
-  attr_accessor :text
-
   TO_19 =  %w(zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen)
   BIG_TENS =  %w(twenty thirty forty fifty sixty seventy eighty ninety)
 
@@ -17,31 +15,39 @@ class TextToNumbers
 
   def initialize(text)
     @text = text
+    @output_str = ""
+    @parentises_opened = false
+  end
+
+  def open_parentises
+    unless @parentises_opened
+      @output_str = "#{@output_str}("
+      @parentises_opened = true
+    end
+  end
+
+  def close_parentises
+    if @parentises_opened
+      @output_str = "#{@output_str})"
+      @parentises_opened = false
+    end
   end
 
   def to_number
-    output_str = "("
-    parentises_opened = true
+    open_parentises
 
-    text.split(/ +/).each_with_index do |particle, idx|
+    @text.split(/ +/).each_with_index do |particle, idx|
       res = resolve_value(particle)
 
-      if res[:close_parentises] && parentises_opened
-        output_str += ")"
-        parentises_opened = false
-      end
+      close_parentises if res[:close_parentises]
+      @output_str += res[:method] if idx > 0
+      open_parentises if res[:open_parentises]
 
-      output_str += res[:method] if idx > 0
-      if res[:open_parentises] && !parentises_opened
-        output_str += "("
-        parentises_opened = true
-      end
-      output_str += res[:value].to_s
+      @output_str += res[:value].to_s
     end
 
-    output_str += ")" if parentises_opened
-
-    eval output_str
+    close_parentises
+    eval(@output_str)
   end
 
   def resolve_value(str)
