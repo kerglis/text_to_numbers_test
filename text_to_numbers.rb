@@ -2,7 +2,7 @@ require 'pry'
 
 class TextToNumbers
 
-  attr_accessor :text, :particles, :output_str
+  attr_accessor :text
 
   TO_19 =  %w(zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen)
   BIG_TENS =  %w(twenty thirty forty fifty sixty seventy eighty ninety)
@@ -17,33 +17,30 @@ class TextToNumbers
 
   def initialize(text)
     @text = text
-    @particles = text.split(/ +/)
-    @output_str = ""
   end
 
   def to_number
-    output_str = ""
-    parentises_opened = false
+    output_str = "("
+    parentises_opened = true
 
-    particles.each_with_index do |particle, idx|
+    text.split(/ +/).each_with_index do |particle, idx|
       res = resolve_value(particle)
 
-      if res[:close_parentises]
+      if res[:close_parentises] && parentises_opened
         output_str += ")"
         parentises_opened = false
       end
 
       output_str += res[:method] if idx > 0
-      if res[:open_parentises] and !parentises_opened
+      if res[:open_parentises] && !parentises_opened
         output_str += "("
         parentises_opened = true
       end
-      output_str += res[:value].to_s if idx < particles.size
+      output_str += res[:value].to_s
     end
 
     output_str += ")" if parentises_opened
 
-    # puts output_str
     eval output_str
   end
 
